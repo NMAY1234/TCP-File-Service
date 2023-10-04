@@ -71,7 +71,7 @@ public class FileClient {
                         try (SocketChannel uploadChannel = SocketChannel.open()) {
                             uploadChannel.connect(new InetSocketAddress(args[0], serverPort));
                             ByteBuffer request = ByteBuffer.wrap(
-                                            (command + CLIENT_FILES + fileName).getBytes());
+                                            (command +  fileName).getBytes());
 
                             uploadChannel.write(request);
                             uploadChannel.shutdownOutput();
@@ -117,7 +117,7 @@ public class FileClient {
                         }
                         else{
                          System.out.println(
-                                 "Error. List not available. /n" + statusCode);
+                                 "Error. List not available. \n" + statusCode);
                         }
                     }
                     catch (IOException e){

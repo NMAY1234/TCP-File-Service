@@ -7,10 +7,14 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 public class FileServer {
+    private static final ByteBuffer SUCCESS = ByteBuffer.wrap("S".getBytes());
+    private static final ByteBuffer FAIL = ByteBuffer.wrap("F".getBytes());
     private static final String SERVER_FILES = "ServerFiles/";
+
 
     public static void main(String[] args) throws Exception{
         int port = 3000;
@@ -46,9 +50,9 @@ public class FileServer {
                         success = file.delete();
                     }
                     if (success) {
-                        statusCode = ByteBuffer.wrap("S".getBytes());
+                        statusCode = SUCCESS;
                     } else {
-                        statusCode = ByteBuffer.wrap("F".getBytes());
+                        statusCode = FAIL;
                     }
                     // Send to Client
                     serveChannel.write(statusCode);
@@ -75,9 +79,12 @@ public class FileServer {
                 }
                 case 'U' -> { // Upload
                     byte[] a = new byte[request.remaining()];
-                    String fileToCopy = String.valueOf(request.get(a));
-                    Files.copy(Path.of(fileToCopy), Path.of(SERVER_FILES));
-                    ByteBuffer code = ByteBuffer.wrap("F".getBytes());
+                    request.get(a);
+                    String fileToCopy = new String(a);
+                    Path filePath = Path.of(fileToCopy);
+                    Files.copy(filePath,
+                            Paths.get(SERVER_FILES, filePath.getFileName().toString()));
+                    ByteBuffer code = ByteBuffer.wrap("S".getBytes());
                     serveChannel.write(code);
 
                 }
