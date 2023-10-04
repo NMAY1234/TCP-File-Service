@@ -12,6 +12,8 @@ public class FileClient {
     private final static int STATUS_CODE_LENGTH = 1;
     private static final String CLIENT_FILES = "ClientFiles/";
 
+    private static final String SERVER_FILES = "ServerFiles/";
+
     public static void main(String[] args) throws Exception{
         if (args.length !=2){
             System.out.println("Syntax: FileClient <ServerIP> <ServerPort>");
@@ -90,6 +92,32 @@ public class FileClient {
                 }
 
                 case "G" -> { // Download
+                    System.out.println("Please enter the name of the file to be downloaded:");
+                    String fileName = SERVER_FILES + keyboard.nextLine();
+
+                    File file = new File(fileName);
+                    if(file.exists()) {
+                        ByteBuffer code;
+                        try (SocketChannel downloadChannel = SocketChannel.open()) {
+                            downloadChannel.connect(new InetSocketAddress(args[0], serverPort));
+                            ByteBuffer request = ByteBuffer.wrap(
+                                    (command +  fileName).getBytes());
+
+                            downloadChannel.write(request);
+                            downloadChannel.shutdownOutput();
+
+                            code = ByteBuffer.allocate(STATUS_CODE_LENGTH);
+                            downloadChannel.read(code);
+                            code.flip();
+                            byte[] a = new byte[STATUS_CODE_LENGTH];
+                            code.get(a);
+                            System.out.println(new String(a));
+                        }
+                    }
+                    else {
+                        System.out.println("No file with that name.");
+                    }
+
                 }
 
                 case "L" -> { // List
@@ -126,6 +154,28 @@ public class FileClient {
                 }
 
                 case "R" -> { //Rename
+                    System.out.println("Please enter the name of the file to be renamed: ");
+                    String oldName = keyboard.nextLine();
+                    System.out.println("Please enter the new name for the file: ");
+                    String newName = keyboard.nextLine();
+
+                    ByteBuffer request = ByteBuffer.wrap((command + oldName + ":" + newName).getBytes());
+                    ByteBuffer code;
+                    try (SocketChannel renameChannel = SocketChannel.open()) {
+                        renameChannel.connect(new InetSocketAddress(args[0], serverPort));
+
+                        renameChannel.write(request);
+                        renameChannel.shutdownOutput();
+
+                        code = ByteBuffer.allocate(STATUS_CODE_LENGTH);
+                        renameChannel.read(code);
+                        code.flip();
+                        byte[] a = new byte[STATUS_CODE_LENGTH];
+                        code.get(a);
+                        System.out.println(new String(a));
+                    } catch (IOException e) {
+                        System.out.println("Failed to communicate.");
+                    }
                 }
                 default -> {
                     if (!command.equals("Q")) {
