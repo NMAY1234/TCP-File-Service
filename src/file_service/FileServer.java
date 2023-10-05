@@ -19,7 +19,7 @@ public class FileServer {
 
 
     public static void main(String[] args) throws Exception{
-        int port = 2000;
+        int port = 3000;
         ServerSocketChannel welcomeChannel = ServerSocketChannel.open();
         welcomeChannel.socket().bind(new InetSocketAddress(port));
 

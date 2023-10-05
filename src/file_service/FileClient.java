@@ -53,12 +53,12 @@ public class FileClient {
                         code = ByteBuffer.allocate(STATUS_CODE_LENGTH);
                         deleteChannel.read(code);
                         code.flip();
-                        byte[] a = new byte[STATUS_CODE_LENGTH];
+                        byte[] a = new byte[code.remaining()];
                         code.get(a);
                         System.out.println(new String(a));
                 }
                     catch (IOException e){
-                        System.out.println("Failed to communicate.");
+                        System.out.println("Failed to communicate. " + e.getMessage());
                     }
                 }
 
@@ -149,7 +149,7 @@ public class FileClient {
                         }
                     }
                     catch (IOException e){
-                        System.out.println("Failed to communicate.");
+                        System.out.println("Failed to communicate. " + e.getMessage());
                     }
                 }
 
@@ -170,7 +170,7 @@ public class FileClient {
                         code = ByteBuffer.allocate(STATUS_CODE_LENGTH);
                         renameChannel.read(code);
                         code.flip();
-                        byte[] a = new byte[STATUS_CODE_LENGTH];
+                        byte[] a = new byte[code.remaining()];
                         code.get(a);
                         System.out.println(new String(a));
                     } catch (IOException e) {
