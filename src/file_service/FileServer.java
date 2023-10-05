@@ -1,7 +1,6 @@
 package file_service;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
@@ -38,53 +37,15 @@ public class FileServer {
 
             switch (command) {
                 case 'D' -> { // Delete
-                    // Get the file name from the remaining message
                     byte[] a = new byte[request.remaining()];
                     request.get(a);
                     String fileName = new String(a);
                     System.out.println("file to delete: " + fileName);
-
-                    // Assess if there is a file to delete and set the status code
                     File file = new File(SERVER_FILES + fileName);
-                    ByteBuffer statusCode;
                     boolean success = false;
                     if (file.exists()) {
                         success = file.delete();
                     }
-                    if (success) {
-                        statusCode = SUCCESS;
-                    } else {
-                        statusCode = FAIL;
-                    }
-                    // Send to Client
-                    serveChannel.write(statusCode);
-                    serveChannel.close();
-                }
-
-                case 'L' -> { //List
-                    File folder = new File(SERVER_FILES);
-                    File[] files = folder.listFiles();
-
-                    if (files != null) {
-                        ByteBuffer fileList = ByteBuffer.wrap(
-                                ("S" +(Arrays.toString(files))).getBytes());
-                        serveChannel.write(fileList);
-                    } else {
-                        ByteBuffer code = ByteBuffer.wrap("F".getBytes());
-                        serveChannel.write(code);
-                    }
-                    serveChannel.close();
-                }
-                case 'R' -> { // Rename
-                    byte[] a = new byte[request.remaining()];
-                    request.get(a);
-                    String[] names = new String(a).split(":");
-                    String oldName = names[0];
-                    String newName = names[1];
-
-                    File oldFile = new File(SERVER_FILES + oldName);
-                    File newFile = new File(SERVER_FILES + newName);
-                    boolean success = oldFile.renameTo(newFile);
                     if (success) {
                         serveChannel.write(SUCCESS);
                     } else {
@@ -92,33 +53,70 @@ public class FileServer {
                     }
                     serveChannel.close();
                 }
+
+                case 'L' -> { //List
+                    File folder = new File(SERVER_FILES);
+                    File[] files = folder.listFiles();
+                    if (files != null) {
+                        ByteBuffer statusCode = ByteBuffer.wrap(("S" +(Arrays.toString(files))).getBytes());
+                        serveChannel.write(statusCode);
+                    } else {
+                        serveChannel.write(FAIL);
+                    }
+                    serveChannel.close();
+
+                }
+                case 'R' -> { // Rename
+                    byte[] a = new byte[request.remaining()];
+                    request.get(a);
+                    String[] names = new String(a).split(":");
+                    File currentFilePath = new File(SERVER_FILES + names[0]);
+                    File newFilePath = new File(SERVER_FILES + names[1]);
+                    boolean success = false;
+                    if (!newFilePath.exists()) {
+                        success = currentFilePath.renameTo(newFilePath);
+                    }
+                    if (success){
+                        serveChannel.write(SUCCESS);
+                    }
+                    else {
+                        serveChannel.write(FAIL);
+                    }
+                    serveChannel.close();
+
+                }
                 case 'G' -> { // Download
                     byte[] a = new byte[request.remaining()];
                     request.get(a);
-                    String fileToCopy = new String(a);
+                    String fileToCopy = SERVER_FILES + new String(a);
                     Path filePath = Path.of(fileToCopy);
-                    Files.copy(filePath,
+                    if(new File(fileToCopy).exists()){
+                        Files.copy(filePath,
                             Paths.get(CLIENT_FILES, filePath.getFileName().toString()));
-                    ByteBuffer code = ByteBuffer.wrap("S".getBytes());
-                    serveChannel.write(code);
-                    // Close the channel
+                        serveChannel.write(SUCCESS);
+                    }
+                    else {
+                        serveChannel.write(FAIL);
+                    }
                     serveChannel.close();
                 }
+
                 case 'U' -> { // Upload
                     byte[] a = new byte[request.remaining()];
                     request.get(a);
-                    String fileToCopy = new String(a);
-                    Path filePath = Path.of(fileToCopy);
-                    Files.copy(filePath,
-                            Paths.get(SERVER_FILES, filePath.getFileName().toString()));
-                    ByteBuffer code = ByteBuffer.wrap("S".getBytes());
-                    serveChannel.write(code);
+                    String fileToUpload = new String(a);
+                    Path filePath = Path.of(CLIENT_FILES + fileToUpload);
+                    if (!new File(SERVER_FILES + fileToUpload).exists()) {
+                        Files.copy(filePath,
+                                Paths.get(SERVER_FILES, filePath.getFileName().toString()));
+                        serveChannel.write(SUCCESS);
+                    }
+                    else {
+                        serveChannel.write(FAIL);
+                    }
+                    serveChannel.close();
                 }
-                default -> {
-                    ByteBuffer code = ByteBuffer.wrap("F".getBytes());
-                    serveChannel.write(code);
-
-                }
+                default -> serveChannel.write(FAIL);
             }
         }
     }
