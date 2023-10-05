@@ -52,12 +52,14 @@ public class FileServer {
                         success = file.delete();
                     }
                     if (success) {
-                        statusCode = SUCCESS;
+                        statusCode = ByteBuffer.wrap("S".getBytes());;
+                        serveChannel.write(statusCode);
+
                     } else {
-                        statusCode = FAIL;
+                        statusCode = ByteBuffer.wrap("F".getBytes());;
+                        serveChannel.write(statusCode);
                     }
                     // Send to Client
-                    serveChannel.write(statusCode);
                     serveChannel.close();
                 }
 
@@ -123,3 +125,4 @@ public class FileServer {
         }
     }
 }
+//u same file exception
