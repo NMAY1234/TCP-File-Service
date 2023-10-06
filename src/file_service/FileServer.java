@@ -14,9 +14,8 @@ public class FileServer {
     private static final String SERVER_FILES = "ServerFiles/";
     private static final String CLIENT_FILES = "ClientFiles/";
 
-
     public static void main(String[] args) throws Exception{
-        int port = 3000;
+        int port = 2000;
         ServerSocketChannel welcomeChannel = ServerSocketChannel.open();
         welcomeChannel.socket().bind(new InetSocketAddress(port));
 
