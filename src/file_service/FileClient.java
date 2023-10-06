@@ -1,9 +1,7 @@
 package file_service;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Scanner;
@@ -60,15 +58,13 @@ public class FileClient {
                         System.out.println("Failed to communicate. " + e.getMessage());
                     }
                 }
-
-                // TOD0: path names for files to change the source address to a new one
                 case "U" -> { // Upload
                     System.out.println("Please enter the name of the file to be uploaded:");
                     String fileName = keyboard.nextLine();
                     ByteBuffer code;
                     try (SocketChannel uploadChannel = SocketChannel.open()) {
                         uploadChannel.connect(new InetSocketAddress(args[0], serverPort));
-                        ByteBuffer request = ByteBuffer.wrap((command + CLIENT_FILES + fileName).getBytes());
+                        ByteBuffer request = ByteBuffer.wrap((command + "ClientFiles/" + fileName).getBytes());
                         uploadChannel.write(request);
                         uploadChannel.shutdownOutput();
 
@@ -93,7 +89,7 @@ public class FileClient {
                     ByteBuffer code;
                     try (SocketChannel downloadChannel = SocketChannel.open()) {
                         downloadChannel.connect(new InetSocketAddress(args[0], serverPort));
-                        ByteBuffer request = ByteBuffer.wrap((command +  SERVER_FILES + fileName).getBytes());
+                        ByteBuffer request = ByteBuffer.wrap((command +  "ServerFiles/" + fileName).getBytes());
                         downloadChannel.write(request);
                         downloadChannel.shutdownOutput();
 

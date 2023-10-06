@@ -8,12 +8,9 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 
 public class FileServer {
-    private static final ByteBuffer SUCCESS = ByteBuffer.wrap("S".getBytes());
-    private static final ByteBuffer FAIL = ByteBuffer.wrap("F".getBytes());
     private static final String SERVER_FILES = "ServerFiles/";
     private static final String CLIENT_FILES = "ClientFiles/";
 
@@ -52,11 +49,11 @@ public class FileServer {
                         success = file.delete();
                     }
                     if (success) {
-                        statusCode = ByteBuffer.wrap("S".getBytes());;
+                        statusCode = ByteBuffer.wrap("S".getBytes());
                         serveChannel.write(statusCode);
 
                     } else {
-                        statusCode = ByteBuffer.wrap("F".getBytes());;
+                        statusCode = ByteBuffer.wrap("F".getBytes());
                         serveChannel.write(statusCode);
                     }
                     // Send to Client
@@ -87,11 +84,13 @@ public class FileServer {
                     File oldFile = new File(SERVER_FILES + oldName);
                     File newFile = new File(SERVER_FILES + newName);
                     boolean success = oldFile.renameTo(newFile);
+                    ByteBuffer statusCode;
                     if (success) {
-                        serveChannel.write(SUCCESS);
+                        statusCode = ByteBuffer.wrap("S".getBytes());
                     } else {
-                        serveChannel.write(FAIL);
+                        statusCode = ByteBuffer.wrap("F".getBytes());
                     }
+                    serveChannel.write(statusCode);
                     serveChannel.close();
                 }
 
@@ -108,15 +107,17 @@ public class FileServer {
                         Path filePath = serverFile.toPath();
                         try {
                             Files.copy(filePath, clientFile.toPath());
-                            serveChannel.write(SUCCESS);
+                            ByteBuffer statusCode = ByteBuffer.wrap("S".getBytes());
+                            serveChannel.write(statusCode);
                         } catch (IOException ex) {
                             System.out.println("Error copying file: " + ex.getMessage());
-                            serveChannel.write(FAIL);
+                            ByteBuffer statusCode = ByteBuffer.wrap("S".getBytes());
+                            serveChannel.write(statusCode);
                         }
                     } else {
                         System.out.println("Download failed. File may not exist or already exists on client.");
-                        serveChannel.write(FAIL);
-                    }
+                        ByteBuffer statusCode = ByteBuffer.wrap("F".getBytes());
+                        serveChannel.write(statusCode);                    }
                     serveChannel.close();
                 }
 
@@ -133,14 +134,17 @@ public class FileServer {
                         Path filePath = clientFile.toPath();
                         try {
                             Files.copy(filePath, serverFile.toPath());
-                            serveChannel.write(SUCCESS);
+                            ByteBuffer statusCode = ByteBuffer.wrap("S".getBytes());
+                            serveChannel.write(statusCode);
                         } catch (IOException ex) {
                             System.out.println("Error copying file: " + ex.getMessage());
-                            serveChannel.write(FAIL);
+                            ByteBuffer statusCode = ByteBuffer.wrap("F".getBytes());
+                            serveChannel.write(statusCode);
                         }
                     } else {
                         System.out.println("Upload failed. File may not exist or already exists on server.");
-                        serveChannel.write(FAIL);
+                        ByteBuffer statusCode = ByteBuffer.wrap("F".getBytes());
+                        serveChannel.write(statusCode);
                     }
                     serveChannel.close();
                 }
