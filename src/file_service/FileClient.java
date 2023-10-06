@@ -11,7 +11,6 @@ import java.util.Scanner;
 public class FileClient {
     private final static int STATUS_CODE_LENGTH = 1;
     private static final String CLIENT_FILES = "ClientFiles/";
-
     private static final String SERVER_FILES = "ServerFiles/";
 
     public static void main(String[] args) throws Exception{
@@ -65,59 +64,52 @@ public class FileClient {
                 // TOD0: path names for files to change the source address to a new one
                 case "U" -> { // Upload
                     System.out.println("Please enter the name of the file to be uploaded:");
-                    String fileName = CLIENT_FILES + keyboard.nextLine();
+                    String fileName = keyboard.nextLine();
+                    ByteBuffer code;
+                    try (SocketChannel uploadChannel = SocketChannel.open()) {
+                        uploadChannel.connect(new InetSocketAddress(args[0], serverPort));
+                        ByteBuffer request = ByteBuffer.wrap((command + CLIENT_FILES + fileName).getBytes());
+                        uploadChannel.write(request);
+                        uploadChannel.shutdownOutput();
 
-                    File file = new File(fileName);
-                    if(file.exists()) {
-                        ByteBuffer code;
-                        try (SocketChannel uploadChannel = SocketChannel.open()) {
-                            uploadChannel.connect(new InetSocketAddress(args[0], serverPort));
-                            ByteBuffer request = ByteBuffer.wrap(
-                                            (command +  fileName).getBytes());
-
-                            uploadChannel.write(request);
-                            uploadChannel.shutdownOutput();
-
-                            code = ByteBuffer.allocate(STATUS_CODE_LENGTH);
-                            uploadChannel.read(code);
-                            code.flip();
-                            byte[] a = new byte[STATUS_CODE_LENGTH];
-                            code.get(a);
-                            System.out.println(new String(a));
+                        code = ByteBuffer.allocate(STATUS_CODE_LENGTH);
+                        uploadChannel.read(code);
+                        code.flip();
+                        byte[] a = new byte[STATUS_CODE_LENGTH];
+                        code.get(a);
+                        String response = new String(a);
+                        System.out.println("Server response: " + response);
+                        if ("S".equals(response)) {
+                            System.out.println("Upload success");
+                        } else {
+                            System.out.println("Upload failed. File may not exist or already exists on server.");
                         }
-                    }
-                    else{
-                        System.out.println("No file with that name.");
                     }
                 }
 
                 case "G" -> { // Download
                     System.out.println("Please enter the name of the file to be downloaded:");
-                    String fileName = SERVER_FILES + keyboard.nextLine();
+                    String fileName = keyboard.nextLine();
+                    ByteBuffer code;
+                    try (SocketChannel downloadChannel = SocketChannel.open()) {
+                        downloadChannel.connect(new InetSocketAddress(args[0], serverPort));
+                        ByteBuffer request = ByteBuffer.wrap((command +  SERVER_FILES + fileName).getBytes());
+                        downloadChannel.write(request);
+                        downloadChannel.shutdownOutput();
 
-                    File file = new File(fileName);
-                    if(file.exists()) {
-                        ByteBuffer code;
-                        try (SocketChannel downloadChannel = SocketChannel.open()) {
-                            downloadChannel.connect(new InetSocketAddress(args[0], serverPort));
-                            ByteBuffer request = ByteBuffer.wrap(
-                                    (command +  fileName).getBytes());
-
-                            downloadChannel.write(request);
-                            downloadChannel.shutdownOutput();
-
-                            code = ByteBuffer.allocate(STATUS_CODE_LENGTH);
-                            downloadChannel.read(code);
-                            code.flip();
-                            byte[] a = new byte[STATUS_CODE_LENGTH];
-                            code.get(a);
-                            System.out.println(new String(a));
+                        code = ByteBuffer.allocate(STATUS_CODE_LENGTH);
+                        downloadChannel.read(code);
+                        code.flip();
+                        byte[] a = new byte[STATUS_CODE_LENGTH];
+                        code.get(a);
+                        String response = new String(a);
+                        System.out.println("Server response: " + response);
+                        if ("S".equals(response)) {
+                            System.out.println("Download success");
+                        } else {
+                            System.out.println("Download failed. File may not exist or already exists on client.");
                         }
                     }
-                    else {
-                        System.out.println("No file with that name.");
-                    }
-
                 }
 
                 case "L" -> { // List

@@ -94,28 +94,57 @@ public class FileServer {
                     }
                     serveChannel.close();
                 }
+
                 case 'G' -> { // Download
                     byte[] a = new byte[request.remaining()];
                     request.get(a);
-                    String fileToCopy = new String(a);
-                    Path filePath = Path.of(fileToCopy);
-                    Files.copy(filePath,
-                            Paths.get(CLIENT_FILES, filePath.getFileName().toString()));
-                    ByteBuffer code = ByteBuffer.wrap("S".getBytes());
-                    serveChannel.write(code);
-                    // Close the channel
+                    String requestedFileName = new String(a).replace(SERVER_FILES, "");
+                    System.out.println("Request for download received for file: " + requestedFileName);
+
+                    File serverFile = new File(SERVER_FILES + requestedFileName);
+                    File clientFile = new File(CLIENT_FILES + requestedFileName);
+
+                    if (serverFile.exists() && !clientFile.exists()) {
+                        Path filePath = serverFile.toPath();
+                        try {
+                            Files.copy(filePath, clientFile.toPath());
+                            serveChannel.write(SUCCESS);
+                        } catch (IOException ex) {
+                            System.out.println("Error copying file: " + ex.getMessage());
+                            serveChannel.write(FAIL);
+                        }
+                    } else {
+                        System.out.println("Download failed. File may not exist or already exists on client.");
+                        serveChannel.write(FAIL);
+                    }
                     serveChannel.close();
                 }
+
                 case 'U' -> { // Upload
                     byte[] a = new byte[request.remaining()];
                     request.get(a);
-                    String fileToCopy = new String(a);
-                    Path filePath = Path.of(fileToCopy);
-                    Files.copy(filePath,
-                            Paths.get(SERVER_FILES, filePath.getFileName().toString()));
-                    ByteBuffer code = ByteBuffer.wrap("S".getBytes());
-                    serveChannel.write(code);
+                    String requestedFileName = new String(a).replace(CLIENT_FILES, "");
+                    System.out.println("Request for upload received for file: " + requestedFileName);
+
+                    File clientFile = new File(CLIENT_FILES + requestedFileName);
+                    File serverFile = new File(SERVER_FILES + requestedFileName);
+
+                    if (clientFile.exists() && !serverFile.exists()) {
+                        Path filePath = clientFile.toPath();
+                        try {
+                            Files.copy(filePath, serverFile.toPath());
+                            serveChannel.write(SUCCESS);
+                        } catch (IOException ex) {
+                            System.out.println("Error copying file: " + ex.getMessage());
+                            serveChannel.write(FAIL);
+                        }
+                    } else {
+                        System.out.println("Upload failed. File may not exist or already exists on server.");
+                        serveChannel.write(FAIL);
+                    }
+                    serveChannel.close();
                 }
+
                 default -> {
                     ByteBuffer code = ByteBuffer.wrap("F".getBytes());
                     serveChannel.write(code);
