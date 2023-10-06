@@ -35,13 +35,10 @@ public class FileServer {
 
             switch (command) {
                 case 'D' -> { // Delete
-                    // Get the file name from the remaining message
                     byte[] a = new byte[request.remaining()];
                     request.get(a);
                     String fileName = new String(a);
                     System.out.println("file to delete: " + fileName);
-
-                    // Assess if there is a file to delete and set the status code
                     File file = new File(SERVER_FILES + fileName);
                     ByteBuffer statusCode;
                     boolean success = false;
@@ -148,14 +145,11 @@ public class FileServer {
                     }
                     serveChannel.close();
                 }
-
                 default -> {
                     ByteBuffer code = ByteBuffer.wrap("F".getBytes());
                     serveChannel.write(code);
-
                 }
             }
         }
     }
 }
-//u same file exception

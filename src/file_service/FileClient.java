@@ -8,9 +8,6 @@ import java.util.Scanner;
 
 public class FileClient {
     private final static int STATUS_CODE_LENGTH = 1;
-    private static final String CLIENT_FILES = "ClientFiles/";
-    private static final String SERVER_FILES = "ServerFiles/";
-
     public static void main(String[] args) throws Exception{
         if (args.length !=2){
             System.out.println("Syntax: FileClient <ServerIP> <ServerPort>");
@@ -34,19 +31,14 @@ public class FileClient {
                 case "D" -> { // Delete
                     System.out.println("Please enter the name of the file to be deleted:");
                     String fileName = keyboard.nextLine();
-
-                    // Converts command and file name to byte buffer array using wrap()
                     ByteBuffer request = ByteBuffer.wrap(
                             (command + fileName).getBytes());
                     ByteBuffer code;
                     try (SocketChannel deleteChannel = SocketChannel.open()) {
                         deleteChannel.connect(new InetSocketAddress(args[0], serverPort));
-
-                        // Sends Command to Server
                         deleteChannel.write(request);
                         deleteChannel.shutdownOutput();
 
-                        // Receives Status Code from Server
                         code = ByteBuffer.allocate(STATUS_CODE_LENGTH);
                         deleteChannel.read(code);
                         code.flip();
@@ -109,17 +101,13 @@ public class FileClient {
                 }
 
                 case "L" -> { // List
-                    // Converts command and file name to byte buffer array using wrap()
                     ByteBuffer request = ByteBuffer.wrap((command).getBytes());
                     ByteBuffer code;
                     try (SocketChannel listChannel = SocketChannel.open()) {
                         listChannel.connect(new InetSocketAddress(args[0], serverPort));
-
-                        // Sends Command to Server
                         listChannel.write(request);
                         listChannel.shutdownOutput();
 
-                        // Receives Status Code and List from Server
                         code = ByteBuffer.allocate(2500);
                         listChannel.read(code);
                         code.flip();
